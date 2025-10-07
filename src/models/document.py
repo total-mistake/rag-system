@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, ConfigDict
 from typing import Optional
 from datetime import datetime
+from typing import List
+import json
 
 class Document(BaseModel):
     """
@@ -15,6 +17,12 @@ class Document(BaseModel):
         created_at: Время индексации
     """
 
+    model_config = ConfigDict(
+        # Разрешаем преобразование типов (например, str → HttpUrl)
+        str_to_lower=False,
+        validate_assignment=True
+    )
+
     id: int = Field(..., ge=0, description="Индекс в FAISS (начинается с 0)")
     title: str = Field(..., min_length=1, description="Заголовок документа")
     url: HttpUrl = Field(..., description="URL страницы документа")
@@ -22,12 +30,17 @@ class Document(BaseModel):
     filename: str = Field(..., min_length=1, description="Имя исходного MD файла")
     created_at: datetime = Field(default_factory=datetime.now)
 
-    class Config:
-        # Разрешаем преобразование типов (например, str → HttpUrl)
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-            HttpUrl: lambda v: str(v)
+    def to_dict(self) -> dict:
+        d = {
+            'id': self.id, 
+            'title': self.title, 
+            'url': str(self.url), 
+            'text':self.text, 
+            'filename': self.filename,
+            'created_at': self.created_at.isoformat()
         }
+
+        return d
 
 class DocumentCollection(BaseModel):
     """
@@ -57,3 +70,15 @@ class DocumentCollection(BaseModel):
         return {
             "documents": [doc.model_dump(mode='json') for doc in self.documents]
         }
+    
+    def to_list_of_dict(self) -> List[dict]:
+        return [doc.to_dict() for doc in self.documents]
+
+    @classmethod
+    def from_json_file(cls, file_path: str) -> 'DocumentCollection':
+        """Загружает коллекцию документов из JSON файла"""
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        documents = [Document(**doc_data) for doc_data in data['documents']]
+        return cls(documents=documents)
