@@ -4,9 +4,9 @@
 from abc import ABC, abstractmethod
 from typing import List
 import requests
-import json
 import logging
 from sentence_transformers import SentenceTransformer
+from .config import IndexingConfig
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +30,13 @@ class LocalEmbeddingProvider(BaseEmbeddingProvider):
     
     def __init__(self, model_name: str):
         logger.info(f"Инициализация локальной модели эмбеддингов: {model_name}")
-        self.model = SentenceTransformer(model_name, trust_remote_code=True)
+        self.model = SentenceTransformer(model_name)
         self.model_name = model_name
     
     def encode(self, texts: List[str]) -> List[List[float]]:
         logger.debug(f"Векторизация {len(texts)} текстов через локальную модель")
         return self.model.encode(
             texts, 
-            task='retrieval.passage',
             batch_size=1,
             show_progress_bar=True
         ).tolist()
@@ -49,7 +48,7 @@ class LocalEmbeddingProvider(BaseEmbeddingProvider):
 class OllamaEmbeddingProvider(BaseEmbeddingProvider):
     """Эмбеддинги через API Ollama"""
     
-    def __init__(self, model_name: str, base_url: str = "http://localhost:11434"):
+    def __init__(self, model_name: str, base_url: str):
         self.model_name = model_name
         self.base_url = base_url
         self._dimension = None

@@ -1,6 +1,5 @@
 import chromadb
 from ..models.document import DocumentCollection
-from typing import List
 from chromadb.errors import NotFoundError
 import logging
 

@@ -6,7 +6,7 @@ from .embedding_providers import (
     LocalEmbeddingProvider, 
     OllamaEmbeddingProvider
 )
-from .config import EmbeddingProviderType
+from .config import EmbeddingProviderType, IndexingConfig
 
 
 class EmbeddingProviderFactory:
@@ -16,7 +16,6 @@ class EmbeddingProviderFactory:
     def create_provider(
         provider_type: EmbeddingProviderType,
         model_name: str,
-        **kwargs
     ) -> BaseEmbeddingProvider:
         """
         Создает провайдер эмбеддингов указанного типа
@@ -37,7 +36,7 @@ class EmbeddingProviderFactory:
             return LocalEmbeddingProvider(model_name)
         
         elif provider_type == EmbeddingProviderType.OLLAMA:
-            base_url = kwargs.get('base_url', 'http://localhost:11434')
+            base_url = IndexingConfig.ollama_base_url
             return OllamaEmbeddingProvider(model_name, base_url)
         
         else:
