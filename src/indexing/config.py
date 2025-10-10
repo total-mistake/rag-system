@@ -1,4 +1,5 @@
 import enum
+from dataclasses import dataclass
 
 class EmbeddingProviderType(enum.Enum):
     LOCAL = "local"
@@ -13,8 +14,9 @@ class IndexingConfig:
 
     # Настройки эмбеддингов
     embedding_provider: EmbeddingProviderType = EmbeddingProviderType.OLLAMA
-    embedding_model: str = "jinaai/jina-embeddings-v3"
+    embedding_model: str = "qwen3-embedding:0.6b"
+    # embedding_model: str = "google/embeddinggemma-300m"
+    # embedding_model: str = "jinaai/jina-embeddings-v3"
 
     # Настройки для Ollama
     ollama_base_url: str = "http://172.16.100.164:11434"
-    ollama_model: str = "qwen3-embedding:0.6b"

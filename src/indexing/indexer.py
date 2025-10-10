@@ -30,7 +30,6 @@ class DocumentIndexer:
         self.db_connector = ChromaDBManager(
             chroma_db_path,
             collection_name,
-            embedding_model,
             embedding_fn
         )
         
