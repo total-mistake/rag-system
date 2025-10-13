@@ -1,6 +1,6 @@
 from ..models.search import SearchResult, RerankerResponse
 from typing import List
-from .prompts import *
+from ..prompts import *
 import requests
 import logging
 import re

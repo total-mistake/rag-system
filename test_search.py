@@ -1,5 +1,5 @@
 from src.indexing.indexer import DocumentIndexer
-from src.indexing.config import IndexingConfig
+from src.config import settings
 import logging
 
 # Настройка логирования
@@ -7,10 +7,10 @@ logging.basicConfig(level=logging.INFO)
 
 # Создаем индексатор (коллекция уже проиндексирована)
 indexer = DocumentIndexer(
-    embedding_provider=IndexingConfig.embedding_provider,
-    embedding_model=IndexingConfig.embedding_model,
-    chroma_db_path=IndexingConfig.chroma_db_path,
-    collection_name=IndexingConfig.collection_name
+    embedding_provider=settings.embedding_provider,
+    embedding_model=settings.embedding_model,
+    chroma_db_path=settings.chroma_db_path,
+    collection_name=settings.collection_name
 )
 
 # Проверяем информацию о коллекции
