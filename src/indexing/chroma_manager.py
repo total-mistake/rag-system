@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class ChromaDBManager:
 
-    def __init__(self, db_path, collection_name, model, embed_func):
+    def __init__(self, db_path, collection_name, embed_func):
         self.client = chromadb.PersistentClient(path=db_path) 
 
         self.collection = self.client.get_or_create_collection(

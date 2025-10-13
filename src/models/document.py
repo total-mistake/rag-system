@@ -27,8 +27,8 @@ class Document(BaseModel):
     title: str = Field(..., min_length=1, description="Заголовок документа")
     url: HttpUrl = Field(..., description="URL страницы документа")
     text: str = Field(..., min_length=1, description="Основной текст документа")
-    filename: str = Field(..., min_length=1, description="Имя исходного MD файла")
-    created_at: datetime = Field(default_factory=datetime.now)
+    filename: Optional[str] = Field(None, min_length=1, description="Имя исходного MD файла")
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
     def to_dict(self) -> dict:
         d = {

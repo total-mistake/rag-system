@@ -6,7 +6,8 @@ from .embedding_providers import (
     LocalEmbeddingProvider, 
     OllamaEmbeddingProvider
 )
-from .config import EmbeddingProviderType, IndexingConfig
+from src.config.settings import EmbeddingProviderType
+from src.config import settings
 
 
 class EmbeddingProviderFactory:
@@ -36,7 +37,7 @@ class EmbeddingProviderFactory:
             return LocalEmbeddingProvider(model_name)
         
         elif provider_type == EmbeddingProviderType.OLLAMA:
-            base_url = IndexingConfig.ollama_base_url
+            base_url = settings.ollama_base_url
             return OllamaEmbeddingProvider(model_name, base_url)
         
         else:

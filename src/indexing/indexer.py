@@ -1,7 +1,7 @@
 from .chroma_manager import ChromaDBManager
 from .chroma_embedding_adapter import ChromaEmbeddingAdapter
 from ..models.document import DocumentCollection
-from .config import EmbeddingProviderType
+from src.config.settings import EmbeddingProviderType
 from .embedding_factory import EmbeddingProviderFactory
 import logging
 import os
@@ -30,7 +30,6 @@ class DocumentIndexer:
         self.db_connector = ChromaDBManager(
             chroma_db_path,
             collection_name,
-            embedding_model,
             embedding_fn
         )
         
