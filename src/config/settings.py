@@ -28,6 +28,7 @@ class AppSettings(BaseSettings):
     # Настройки поиска
     initial_candidates: int = Field(default=10, ge=1, description="Кандидаты из векторного поиска")
     final_results: int = Field(default=5, ge=1, description="Финальные результаты")
+    max_context_documents: int = Field(default=5, ge=1, le=20, description="Максимум документов в контексте")
     
     # Настройки реранкера
     enable_reranking: bool = Field(default=True, description="Включить реранкинг")

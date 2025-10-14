@@ -1,3 +1,5 @@
+# === ПРОМПТЫ ДЛЯ РЕРАНКЕРА ===
+
 RERANK_SYSTEM_PROMPT = {
     "role": "system",
     "content": """Ты - эксперт по оценке релевантности документов. 
@@ -25,3 +27,50 @@ def create_rerank_user_prompt(query: str, document_text: str) -> str:
 
         Оценка релевантности (1-5):"""
     }
+
+# === ПРОМПТЫ ДЛЯ ГЕНЕРАЦИИ ОТВЕТОВ ===
+
+RAG_SYSTEM_PROMPT = {
+    "role": "system",
+    "content": """Ты помощник, который отвечает на вопросы пользователей на основе предоставленных документов.
+
+ПРАВИЛА:
+1. Отвечай только на основе предоставленной информации из документов
+2. Если в документах нет ответа на вопрос, честно скажи об этом
+3. Всегда указывай источники информации
+4. Отвечай на том же языке, на котором задан вопрос
+5. Будь точным и конкретным
+6. В конце ответа обязательно укажи список URL инструкций, которые помогают ответить на вопрос
+
+ФОРМАТ ОТВЕТА:
+[Твой ответ на основе документов]
+
+Источники:
+- [URL1]
+- [URL2]
+- [URL3]"""
+}
+
+def create_rag_user_prompt(query: str, context: str) -> str:
+    """Создание пользовательского промпта для RAG"""
+    return {
+        "role": "user",
+        "content":
+        f"""Контекст из документов:
+        {context}
+
+        Вопрос пользователя: {query}
+
+        Ответ:"""
+    }
+
+from src.models.document import Document
+from typing import List
+
+def format_document_context(documents: List[Document]) -> str:
+    """Форматирование документов в контекст"""
+    context = ""
+    for i, doc in enumerate(documents, 1):
+        doc_text = f"\nДокумент {i}:\nЗаголовок: {doc.title}\nURL: {doc.url}\nТекст: {doc.text}\n\n"
+        context += doc_text
+    return context

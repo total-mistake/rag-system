@@ -14,26 +14,6 @@ class OllamaResponse:
     prompt_eval_count: Optional[int] = None     # Количество токенов в запрос (входные токены)
     eval_count: Optional[int] = None            # Количество токенов в ответе (выходные токены)
 
-    @property
-    def input_tokens(self) -> int:
-        return self.prompt_eval_count
-
-    @property
-    def output_tokens(self) -> int:
-        return self.eval_count
-
-    @property
-    def total_tokens(self) -> int:
-        return self.input_tokens + self.output_tokens
-
-    @property
-    def response_time_ms(self) -> int:
-        return self.total_duration
-
-    @property
-    def load_time_ms(self) -> int:
-        return self.load_duration
-
 class OllamaClient:
     """Клиент для работы с Ollama"""
 

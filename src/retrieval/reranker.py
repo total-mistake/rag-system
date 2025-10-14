@@ -33,15 +33,14 @@ class RerankerService:
                     messages=[RERANK_SYSTEM_PROMPT,create_rerank_user_prompt(query, content)],
                     temperature=self.temperature,
                     top_p=self.top_p,
-                    top_k=self.top_k,
-                    timeout=self.timeout
+                    top_k=self.top_k
                 )
 
                 score = self._extract_score(response.content)
                 doc.rerank_score = score
                 doc.update_final_score()
 
-                logger.info(f"Реранкинг: {response.input_tokens} входных + {response.output_tokens} выходных токенов.\nВремя загрузки: {response.load_duration}\nВремя генерации ответа: {response.eval_duration}\nОбщее время: {response.total_duration}")
+                logger.info(f"Реранкинг: {response.prompt_eval_count} входных + {response.eval_count} выходных токенов.\nВремя загрузки: {response.load_duration}\nВремя генерации ответа: {response.eval_duration}\nОбщее время: {response.total_duration}")
             except Exception as e:
                 logger.error(f"Ошибка при реранжировании документа: {e}")
         
