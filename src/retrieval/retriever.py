@@ -3,6 +3,7 @@ from src.config import settings
 from .reranker import RerankerService
 from ..models.document import Document
 from ..models.search import SearchResult
+from ..ollama_client import OllamaClient
 from typing import List
 import logging
 import time
@@ -18,13 +19,14 @@ class DocumentRetriever:
             collection_name=settings.collection_name
         )
 
+        self.ollama_client = OllamaClient(
+            base_url=settings.ollama_base_url,
+            timeout=settings.ollama_timeout
+        )
+
         self.reranker = None
         if settings.enable_reranking:
-            self.reranker = RerankerService(
-                model_name=settings.reranker_model,
-                base_url=settings.ollama_base_url,
-                timeout=settings.reranker_timeout
-            )
+            self.reranker = RerankerService(self.ollama_client)
 
     def search(self, query: str, top_k: int = 1) -> List[SearchResult]:
         start_time = time.time()

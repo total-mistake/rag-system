@@ -1,4 +1,11 @@
 from src.retrieval.retriever import DocumentRetriever
+import logging
+
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # Создаем ретривер
 retriever = DocumentRetriever()
