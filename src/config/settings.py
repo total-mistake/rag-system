@@ -28,19 +28,25 @@ class AppSettings(BaseSettings):
     # Настройки поиска
     initial_candidates: int = Field(default=10, ge=1, description="Кандидаты из векторного поиска")
     final_results: int = Field(default=5, ge=1, description="Финальные результаты")
+    max_context_documents: int = Field(default=5, ge=1, le=20, description="Максимум документов в контексте")
     
     # Настройки реранкера
     enable_reranking: bool = Field(default=True, description="Включить реранкинг")
+    reranker_temperature: float = Field(default=0.1, ge=0.0, le=1.0, description="Температура модели реранкера")
     reranker_model: str = Field(default="gemma3:4b-it-qat", description="Модель реранкера")
-    reranker_timeout: int = Field(default=30, ge=1, description="Таймаут реранкера")
+    reranker_top_k: int = Field(default=40, ge=1, description="Топ-к реранкера")
+    reranker_top_p: float = Field(default=0.95, ge=0.0, le=1.0, description="Топ-п реранкера")
     
+    # Настройки генерации ответа
+    generation_model: str = Field(default="gemma3:4b-it-qat", description="Модель генерации ответа")
+    generation_temperature: float = Field(default=0.1, ge=0.0, le=1.0, description="Температура модели генерации ответа")
+    generation_top_k: int = Field(default=40, ge=1, description="Топ-к генерации ответа")
+    generation_top_p: float = Field(default=0.95, ge=0.0, le=1.0, description="Топ-п генерации ответа")
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
-        # Позволяет переопределять настройки через переменные окружения
-        env_prefix = "RAG_"  # Префикс для переменных окружения
 
 # Создаем глобальный экземпляр настроек
 settings = AppSettings()

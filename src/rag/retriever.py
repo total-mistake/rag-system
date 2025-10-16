@@ -1,8 +1,8 @@
 from src.indexing.indexer import DocumentIndexer
 from src.config import settings
-from .reranker import RerankerService
 from ..models.document import Document
 from ..models.search import SearchResult
+from ..models.pipeline import VectorSearchResult, StageMetrics
 from typing import List
 import logging
 import time
@@ -18,35 +18,26 @@ class DocumentRetriever:
             collection_name=settings.collection_name
         )
 
-        self.reranker = None
-        if settings.enable_reranking:
-            self.reranker = RerankerService(
-                model_name=settings.reranker_model,
-                base_url=settings.ollama_base_url,
-                timeout=settings.reranker_timeout
-            )
-
-    def search(self, query: str, top_k: int = 1) -> List[SearchResult]:
+    def search(self, query: str, top_k: int = 1) -> VectorSearchResult:
         start_time = time.time()
 
         vector_results = self._vector_search(query, settings.initial_candidates)
         vector_search_time = time.time() - start_time
-        logger.info(f"Векторный поиск занял: {vector_search_time:.3f}с")
-
-        if self.reranker and len(vector_results) > 1:
-            rerank_start = time.time()
-            vector_results = self.reranker.rerank(query, vector_results)
-            rerank_time = time.time() - rerank_start
-            logger.info(f"Реранкинг занял: {rerank_time:.3f}с")
 
         vector_results.sort(key=lambda x: x.final_score, reverse=True)
         final_results = vector_results[:top_k]
+
+        result = VectorSearchResult(
+            StageMetrics(
+                stage_name="retriever", 
+                duration=vector_search_time),
+            final_results
+        )
         
         total_time = time.time() - start_time
-        
         logger.info(f"Поиск завершен: {len(final_results)} результатов за {total_time:.3f}с")
         
-        return final_results
+        return result
 
     def _vector_search(self, query: str, top_k: int = 1) -> List[SearchResult]:
         try:
