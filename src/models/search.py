@@ -21,13 +21,7 @@ class SearchResult:
             # Используем векторный скор (distance, меньше = лучше)
             self.final_score = max(0, 1 - self.vector_score)
 
-@dataclass
-class SearchMetrics:
-    vector_search_time: float
-    rerank_time: Optional[float]
-    total_time: float
-
-@dataclass
-class RerankerResponse:
-    score: float
-    reasoning: Optional[str] = None
+# @dataclass
+# class RerankerResponse:
+#     score: float
+#     reasoning: Optional[str] = None

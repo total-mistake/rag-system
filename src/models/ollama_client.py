@@ -11,7 +11,7 @@ class OllamaResponse:
     total_duration: Optional[int] = None        # Общее время выполнения запроса (с загрузкой модели)
     load_duration: Optional[int] = None         # Время загрузки модели
     eval_duration: Optional[int] = None         # Время генерации ответа
-    prompt_eval_count: Optional[int] = None     # Количество токенов в запрос (входные токены)
+    prompt_eval_count: Optional[int] = None     # Количество токенов в запросе (входные токены)
     eval_count: Optional[int] = None            # Количество токенов в ответе (выходные токены)
 
 class OllamaClient:
