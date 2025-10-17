@@ -8,8 +8,6 @@ class StageMetrics:
     """Базовые метрики для любого этапа"""
     stage_name: str
     duration: Optional[float] = None    # В секундах
-    # success: bool = False
-    # error_message: Optional[str] = None
 
 @dataclass
 class VectorSearchResult:

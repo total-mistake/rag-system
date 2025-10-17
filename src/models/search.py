@@ -20,8 +20,3 @@ class SearchResult:
         else:
             # Используем векторный скор (distance, меньше = лучше)
             self.final_score = max(0, 1 - self.vector_score)
-
-# @dataclass
-# class RerankerResponse:
-#     score: float
-#     reasoning: Optional[str] = None

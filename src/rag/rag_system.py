@@ -18,8 +18,6 @@ class RAGSystem:
     def request(self, query: str) -> str:
         self.pipeline = RAGPipeline(query)
 
-        start_time = time.time()
-
         retriever_results = self.retriever.search(query, top_k=settings.initial_candidates)
         self.pipeline.vector_search = retriever_results
 
@@ -32,7 +30,7 @@ class RAGSystem:
         
         response = self.generator.generate_answer(query, documents)
         self.pipeline.generation = response
-        self.pipeline.total_duration = time.time() - start_time
+        self.pipeline.total_duration = self.pipeline.get_total_duration()
 
         return response.answer
     

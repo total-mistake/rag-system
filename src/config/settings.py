@@ -43,6 +43,9 @@ class AppSettings(BaseSettings):
     generation_top_k: int = Field(default=40, ge=1, description="Топ-к генерации ответа")
     generation_top_p: float = Field(default=0.95, ge=0.0, le=1.0, description="Топ-п генерации ответа")
 
+    # Настройки телеграм бота
+    telegram_token: str = Field(default=None, description="Токен аутентификации бота")
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

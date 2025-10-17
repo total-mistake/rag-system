@@ -18,14 +18,13 @@ class Document(BaseModel):
     """
 
     model_config = ConfigDict(
-        # Разрешаем преобразование типов (например, str → HttpUrl)
         str_to_lower=False,
         validate_assignment=True
     )
 
     id: int = Field(..., ge=0, description="Индекс в FAISS (начинается с 0)")
     title: str = Field(..., min_length=1, description="Заголовок документа")
-    url: HttpUrl = Field(..., description="URL страницы документа")
+    url: str = Field(..., description="URL страницы документа")
     text: str = Field(..., min_length=1, description="Основной текст документа")
     filename: Optional[str] = Field(None, min_length=1, description="Имя исходного MD файла")
     created_at: Optional[datetime] = Field(default_factory=datetime.now)
