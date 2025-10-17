@@ -1,18 +1,18 @@
+from src.bot.tg_bot import *
+from src.config.settings import settings
 
-from src.indexing.indexer import DocumentIndexer
-from src.config import settings
-import logging
+def main():
+    app = ApplicationBuilder().token(settings.telegram_token).build()
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_question))
+    app.add_handler(CallbackQueryHandler(show_modules, pattern="^more_info$"))
+    app.add_handler(CallbackQueryHandler(show_params, pattern="^module_"))
+    app.add_handler(CallbackQueryHandler(show_param_value, pattern="^param_"))
+    app.add_handler(CallbackQueryHandler(back_to_answer, pattern="^back_to_answer$"))
 
-# Ollama API
-indexer_ollama = DocumentIndexer(
-    embedding_provider=settings.embedding_provider,
-    embedding_model=settings.embedding_model,
-    chroma_db_path=settings.chroma_db_path,
-    collection_name=settings.collection_name
-)
+    print("Бот запущен.")
+    app.run_polling()
 
-print("Начинаем индексацию документов через Ollama...")
-indexer_ollama.index_documents("storage/documents/documents.json")
+if __name__ == "__main__":
+    main()

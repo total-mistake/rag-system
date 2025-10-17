@@ -33,6 +33,7 @@ class ResponseGenerator:
         try:
             start_time = time.time()
             selected_docs = documents[:settings.max_context_documents]
+            source_urls = [doc.url for doc in selected_docs]
             context = format_document_context(selected_docs)
             
             messages = [RAG_SYSTEM_PROMPT, create_rag_user_prompt(query, context)]
@@ -48,7 +49,7 @@ class ResponseGenerator:
             self.logger.info(f"Сгенерированный ответ:\n {response.content}")
 
             # Парсинг ответа и извлечение URL
-            answer, source_urls = self._parse_response(response.content)
+            answer = response.content
 
             self.logger.info(f"Генерация ответа: {response.prompt_eval_count} входных + {response.eval_count} выходных токенов.\nВремя загрузки: {response.load_duration}\nВремя генерации ответа: {response.eval_duration}\nОбщее время: {response.total_duration}")
 
@@ -68,37 +69,3 @@ class ResponseGenerator:
         except Exception as e:
             self.logger.error(f"Ошибка при генерации ответа: {e}")
             raise
-
-    def _parse_response(self, content: str) -> tuple[str, List[str]]:
-        """Парсинг ответа модели для извлечения текста и URL"""
-        
-        # Разделяем ответ на основную часть и источники
-        parts = content.split("Источники:")
-        
-        if len(parts) == 2:
-            answer = parts[0].strip()
-            sources_text = parts[1].strip()
-            
-            # Извлекаем URL из источников
-            urls = self._extract_urls(sources_text)
-        else:
-            answer = content.strip()
-            urls = []
-        
-        return answer, urls
-    
-    def _extract_urls(self, text: str) -> List[str]:
-        """Извлечение URL из текста"""
-        
-        # Паттерн для поиска URL
-        url_pattern = r'https?://[^\s\)]+|www\.[^\s\)]+'
-        urls = re.findall(url_pattern, text)
-        
-        # Очистка URL от лишних символов
-        cleaned_urls = []
-        for url in urls:
-            url = url.rstrip('.,;:!?')
-            if url not in cleaned_urls:
-                cleaned_urls.append(url)
-        
-        return cleaned_urls
