@@ -1,12 +1,12 @@
 from .document import Document
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 @dataclass
 class SearchResult:
     document: Document
     vector_score: float
-    rerank_score: Optional[int] = None
+    rerank_score: Optional[int | float] = None
     final_score: Optional[float] = None
 
     def __post_init__(self):

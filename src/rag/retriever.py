@@ -11,15 +11,18 @@ logger = logging.getLogger(__name__)
 
 class DocumentRetriever:
     def __init__(self):
+        logger.debug("Инициализация индексатора")
         self.indexer = DocumentIndexer(
             embedding_provider=settings.embedding_provider,
             embedding_model=settings.embedding_model,
             chroma_db_path=settings.chroma_db_path,
             collection_name=settings.collection_name
         )
+        logger.debug("Завершение инициализации индексатора")
 
     def search(self, query: str, top_k: int = 1) -> VectorSearchResult:
         start_time = time.time()
+        logger.info("Начало векторного поиска")
 
         vector_results = self._vector_search(query, settings.initial_candidates)
         vector_search_time = time.time() - start_time
@@ -35,7 +38,8 @@ class DocumentRetriever:
         )
         
         total_time = time.time() - start_time
-        logger.info(f"Поиск завершен: {len(final_results)} результатов за {total_time:.3f}с")
+        # logging.info(f"Поиск завершен: {len(final_results)} результатов за {total_time:.3f}с")
+        logger.info(f"Завершение векторного поиска. время выполнения: {total_time:3f}")
         
         return result
 
@@ -48,6 +52,7 @@ class DocumentRetriever:
             )
 
             search_results = []
+            logger.debug(f"Найдено {len(results['ids'][0])} результатов поиска")
 
             for i, (doc_id, distance, metadata) in enumerate(zip(
                 results['ids'][0], 
@@ -68,7 +73,8 @@ class DocumentRetriever:
 
                 search_results.append(search_result)
 
+            logger.info(f"Обработано {len(search_results)} результатов поиска")
             return search_results
         except Exception as e:
-            logger.error(f"Error during vector search: {e}")
+            logger.error(f"Ошибка при векторном поиске: {e}")
             return []

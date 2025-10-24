@@ -7,6 +7,9 @@ class EmbeddingProviderType(str, Enum):
     LOCAL = "local"
     OLLAMA = "ollama"
 
+class RerankerProviderType(str, Enum):
+    OLLAMA = "ollama"
+
 class AppSettings(BaseSettings):
     # Общие настройки приложения
     app_name: str = Field(default="RAG System", description="Название приложения")
@@ -31,6 +34,7 @@ class AppSettings(BaseSettings):
     max_context_documents: int = Field(default=5, ge=1, le=20, description="Максимум документов в контексте")
     
     # Настройки реранкера
+    reranker_provider: RerankerProviderType = Field(default=RerankerProviderType.OLLAMA)
     enable_reranking: bool = Field(default=True, description="Включить реранкинг")
     reranker_temperature: float = Field(default=0.1, ge=0.0, le=1.0, description="Температура модели реранкера")
     reranker_model: str = Field(default="gemma3:4b-it-qat", description="Модель реранкера")

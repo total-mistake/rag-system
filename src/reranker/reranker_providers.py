@@ -1,16 +1,26 @@
+from abc import ABC, abstractmethod
+from typing import List
+from ..models.pipeline import RerankingResult, StageMetrics
 from ..models.search import SearchResult
 from ..models.ollama_client import OllamaClient
-from ..models.pipeline import RerankingResult, StageMetrics
 from src.config.settings import settings
-from typing import List
-from ..config.prompts import *
-import time
+from src.config.prompts import *
 import logging
+import time
 import re
 
 logger = logging.getLogger(__name__)
 
-class Reranker:
+class BaseRerankerProvider(ABC):
+    """Абстрактный базовый класс для провайдеров реранкера"""
+
+    @abstractmethod
+    def rerank(self, query: str, documents: List[SearchResult]) -> RerankingResult:
+        pass
+
+class OllamaRerankerProvider(BaseRerankerProvider):
+    """Реранкер через модель на сервере Ollama"""
+
     def __init__(self):
         self.client  = OllamaClient(
             base_url=settings.ollama_base_url,
@@ -25,11 +35,13 @@ class Reranker:
         self.top_k = settings.reranker_top_k
 
     def rerank(self, query: str, documents: List[SearchResult]) -> RerankingResult:
+        start_time = time.time()
+        logger.info("начало этапа реранжирования")
+
         if not self.client.is_healthy():
             logger.info("Этап реранжирования пропущен из-за сбоя доступа к серверу Ollama")
             return documents
         
-        start_time = time.time()
         total_tokens = 0
 
         for doc in documents:
@@ -50,11 +62,14 @@ class Reranker:
 
                 total_tokens += response.prompt_eval_count + response.eval_count
 
-                logger.info(f"Реранкинг: {response.prompt_eval_count} входных + {response.eval_count} выходных токенов.\nВремя загрузки: {response.load_duration}\nВремя генерации ответа: {response.eval_duration}\nОбщее время: {response.total_duration}")
+                logger.debug(f"Реранкинг: {response.prompt_eval_count} входных + {response.eval_count} выходных токенов.\nВремя загрузки: {response.load_duration}\nВремя генерации ответа: {response.eval_duration}\nОбщее время: {response.total_duration}")
             except Exception as e:
                 logger.error(f"Ошибка при реранжировании документа: {e}")
         
         total_time = time.time() - start_time
+        logger.info(f"завершение этапа реранжирования. Время выполнения: {total_time:.3f}")
+        
+        documents.sort(key=lambda x: x.final_score, reverse=True)
         result = RerankingResult(
             StageMetrics("rerank", total_time),
             documents,

@@ -87,7 +87,7 @@ class OllamaClient:
         try:
             response = requests.get(self.base_url)
             if 200 <= response.status_code < 300:
-                self.logger.info(f"Сервер Ollama по адресу {self.base_url} доступен")
+                self.logger.debug(f"Сервер Ollama по адресу {self.base_url} доступен")
                 return True
             else:
                 self.logger.error(f"Сервер Ollama по адресу {self.base_url} недоступен")
