@@ -9,6 +9,7 @@ class EmbeddingProviderType(str, Enum):
 
 class RerankerProviderType(str, Enum):
     OLLAMA = "ollama"
+    LocalBGE = "bge"
 
 class AppSettings(BaseSettings):
     # Общие настройки приложения

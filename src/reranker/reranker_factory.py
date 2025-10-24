@@ -3,7 +3,8 @@
 """
 from .reranker_providers import (
     BaseRerankerProvider,
-    OllamaRerankerProvider
+    OllamaRerankerProvider,
+    LocalBGERerankerProvider
 )
 from src.config.settings import RerankerProviderType
 
@@ -16,6 +17,7 @@ class RerankerProviderFactory:
         
         if provider_type == RerankerProviderType.OLLAMA:
             return OllamaRerankerProvider()
-        
+        elif provider_type == RerankerProviderType.LocalBGE:
+            return LocalBGERerankerProvider()
         else:
             raise ValueError(f"Неподдерживаемый тип провайдера: {provider_type}")
