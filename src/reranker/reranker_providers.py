@@ -4,6 +4,7 @@ from ..models.pipeline import RerankingResult, StageMetrics
 from ..models.search import SearchResult
 from ..models.ollama_client import OllamaClient
 from FlagEmbedding import FlagReranker
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from src.config.settings import settings
 from src.config.prompts import *
 import logging
@@ -45,28 +46,17 @@ class OllamaRerankerProvider(BaseRerankerProvider):
         
         total_tokens = 0
 
-        for doc in documents:
-            try:
-                content = f"{doc.document.title}\n{doc.document.text}"
-                
-                response = self.client.chat(
-                    model=self.model,
-                    messages=[RERANK_SYSTEM_PROMPT,create_rerank_user_prompt(query, content)],
-                    temperature=self.temperature,
-                    top_p=self.top_p,
-                    top_k=self.top_k
-                )
+        with ThreadPoolExecutor(max_workers=settings.max_concurrent_requests) as executor:
+            futures = [executor.submit(self._rerank_single_document, query, doc) for doc in documents]
 
-                score = (self._extract_score(response.content)- 1) / 4
-                doc.rerank_score = score
-                doc.update_final_score()
-
-                total_tokens += response.prompt_eval_count + response.eval_count
-
-                logger.debug(f"Реранкинг: {response.prompt_eval_count} входных + {response.eval_count} выходных токенов.\nВремя загрузки: {response.load_duration}\nВремя генерации ответа: {response.eval_duration}\nОбщее время: {response.total_duration}")
-            except Exception as e:
-                logger.error(f"Ошибка при реранжировании документа: {e}")
-        
+            # Ожидаем завершения всех задач
+            for future in as_completed(futures):
+                try:
+                    tokens = future.result()  # Получаем результат
+                    total_tokens += tokens
+                except Exception as e:
+                    logger.error(f"Ошибка в параллельной задаче: {e}")
+                    
         total_time = time.time() - start_time
         logger.info(f"завершение этапа реранжирования. Время выполнения: {total_time:.3f}")
         
@@ -77,6 +67,29 @@ class OllamaRerankerProvider(BaseRerankerProvider):
             total_tokens
         )
         return result
+
+    def _rerank_single_document(self, query, doc):
+        try:
+            content = f"{doc.document.title}\n{doc.document.text}"
+            
+            response = self.client.chat(
+                model=self.model,
+                messages=[RERANK_SYSTEM_PROMPT,create_rerank_user_prompt(query, content)],
+                temperature=self.temperature,
+                top_p=self.top_p,
+                top_k=self.top_k
+            )
+            
+            score = self._extract_score(response.content)
+            doc.rerank_score = score
+            doc.update_final_score()
+            
+            # Возвращаем количество токенов
+            return response.prompt_eval_count + response.eval_count
+            
+        except Exception as e:
+            logger.error(f"Ошибка при реранжировании документа: {e}")
+            return 0  # Возвращаем 0 токенов при ошибке
 
 
     def _extract_score(self, content: str) -> int:

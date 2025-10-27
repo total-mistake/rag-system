@@ -20,6 +20,7 @@ class AppSettings(BaseSettings):
     collection_name: str = Field(default="documents", description="Имя коллекции")
     
     # Настройки эмбеддингов
+    # text_splitter: bool = Field(default=False, description="Использовать сегментацию текста для запроса пользователя")
     embedding_provider: EmbeddingProviderType = Field(default=EmbeddingProviderType.OLLAMA)
     embedding_model: str = Field(default="qwen3-embedding:0.6b", description="Модель эмбеддингов")
     batch_size: int = Field(default=1, ge=1, description="Размер батча для индексации")
@@ -28,6 +29,7 @@ class AppSettings(BaseSettings):
     # Настройки Ollama
     ollama_base_url: str = Field(default="http://172.16.100.164:11434", description="URL Ollama сервера")
     ollama_timeout: int = Field(default=30, ge=1, description="Таймаут запросов к Ollama")
+    max_concurrent_requests: int = Field(default=5)
     
     # Настройки поиска
     initial_candidates: int = Field(default=10, ge=1, description="Кандидаты из векторного поиска")
