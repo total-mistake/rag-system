@@ -12,6 +12,7 @@ class RAGAdapter:
             "retriever": "Извлечение документов",
             "reranker": "Реранжирование",
             "generator": "Генерация ответа",
+            "general": "Общая статистика"
         }
 
         self.PARAM_NAMES = {
@@ -32,6 +33,9 @@ class RAGAdapter:
                 "output_tokens": "Выходные токены",
                 "source_documents": "Инструкции откуда была взята информация"
             },
+             "general": {
+                "total_duration": "Общее время выполнения"
+            }
         }
 
     def answer_question(self, question: str) -> str:
@@ -63,7 +67,12 @@ class RAGAdapter:
             "retriever": "vector_search",
             "reranker": "reranking",
             "generator": "generation",
+            "general": "total_duration"
         }
+
+        key = mapping.get(module.lower())
+        if module.lower() == "general":
+            return {"total_duration": data.get("total_duration")}
 
         key = mapping.get(module.lower())
         if not key:
@@ -87,7 +96,7 @@ class RAGAdapter:
         name = self.PARAM_NAMES.get(module, {}).get(param, param)
 
         # время выполнения
-        if param == "duration" and isinstance(value, (float, int)):
+        if param in ("duration", "total_duration") and isinstance(value, (float, int)):
             return f"{name}: {value:.3f} сек."
 
         # список документов
@@ -95,36 +104,40 @@ class RAGAdapter:
             if not value:
                 return f"{name}: —"
 
+            sorted_items = value.copy()
+            if module == "retriever":
+            # Для ретривера: сортировка по убыванию векторного скора (лучшие сверху)
+                sorted_items.sort(key=lambda x: x.get("vector_score", 0), reverse=True)
+            elif module == "reranker":
+                # Для реранкера: сортировка по убыванию оценки реранкера (лучшие сверху)
+                sorted_items.sort(key=lambda x: x.get("rerank_score", 0), reverse=True)
+
             lines = [f"*{name}:*"]
             for i, item in enumerate(value[:5], 1):  # максимум 5 документов для читаемости
-                # Если элемент — объект Document
-                if hasattr(item, "title"):
-                    title = getattr(item, "title", "Без названия")
-                    url = getattr(item, "url", None)
-                    if url:
-                        lines.append(f"{i}. [{title}]({url})")
-                    else:
-                        lines.append(f"{i}. {title}")
+                doc = item.get("document", {})
+                if hasattr(doc, "title"):
+                    title = getattr(doc, "title", "Без названия")
+                    url = getattr(doc, "url", None)
+                else:
+                    title = doc.get("title", "Без названия")
+                    url = doc.get("url", "")
 
-                # Если элемент — словарь SearchResult
-                elif isinstance(item, dict):
-                    doc = item.get("document", {})
-                    if hasattr(doc, "title"):
-                        title = getattr(doc, "title", "Без названия")
-                        url = getattr(doc, "url", None)
-                    else:
-                        title = doc.get("title", "Без названия")
-                        url = doc.get("url", "")
-
-                    score = (
-                        item.get("vector_score") if module == "retriever" 
-                        else item.get("rerank_score")
-                    )
-                    score_str = f" — score: {score:.3f}" if score is not None else ""
-                    if url:
-                        lines.append(f"{i}. [{title}]({url}){score_str}")
-                    else:
-                        lines.append(f"{i}. {title}{score_str}")
+                score = (
+                    item.get("vector_score") if module == "retriever" 
+                    else item.get("rerank_score")
+                )
+                if score is not None:
+                    if module == "retriever":
+                        score_str = f" — score: {score:.3f}"  # векторный скор с 3 знаками
+                    else:  # reranker
+                        score_str = f" — score: {int(score)}"  # оценка реранкера без знаков после запятой
+                else:
+                    score_str = ""
+                    
+                if url:
+                    lines.append(f"{i}. [{title}]({url}){score_str}")
+                else:
+                    lines.append(f"{i}. {title}{score_str}")
 
             return "\n".join(lines)
 

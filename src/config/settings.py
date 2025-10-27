@@ -7,6 +7,10 @@ class EmbeddingProviderType(str, Enum):
     LOCAL = "local"
     OLLAMA = "ollama"
 
+class RerankerProviderType(str, Enum):
+    OLLAMA = "ollama"
+    LocalBGE = "bge"
+
 class AppSettings(BaseSettings):
     # Общие настройки приложения
     app_name: str = Field(default="RAG System", description="Название приложения")
@@ -16,6 +20,7 @@ class AppSettings(BaseSettings):
     collection_name: str = Field(default="documents", description="Имя коллекции")
     
     # Настройки эмбеддингов
+    # text_splitter: bool = Field(default=False, description="Использовать сегментацию текста для запроса пользователя")
     embedding_provider: EmbeddingProviderType = Field(default=EmbeddingProviderType.OLLAMA)
     embedding_model: str = Field(default="qwen3-embedding:0.6b", description="Модель эмбеддингов")
     batch_size: int = Field(default=1, ge=1, description="Размер батча для индексации")
@@ -24,6 +29,7 @@ class AppSettings(BaseSettings):
     # Настройки Ollama
     ollama_base_url: str = Field(default="http://172.16.100.164:11434", description="URL Ollama сервера")
     ollama_timeout: int = Field(default=30, ge=1, description="Таймаут запросов к Ollama")
+    max_concurrent_requests: int = Field(default=5)
     
     # Настройки поиска
     initial_candidates: int = Field(default=10, ge=1, description="Кандидаты из векторного поиска")
@@ -31,6 +37,7 @@ class AppSettings(BaseSettings):
     max_context_documents: int = Field(default=5, ge=1, le=20, description="Максимум документов в контексте")
     
     # Настройки реранкера
+    reranker_provider: RerankerProviderType = Field(default=RerankerProviderType.OLLAMA)
     enable_reranking: bool = Field(default=True, description="Включить реранкинг")
     reranker_temperature: float = Field(default=0.1, ge=0.0, le=1.0, description="Температура модели реранкера")
     reranker_model: str = Field(default="gemma3:4b-it-qat", description="Модель реранкера")

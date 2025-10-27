@@ -1,12 +1,12 @@
 from .document import Document
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 @dataclass
 class SearchResult:
     document: Document
     vector_score: float
-    rerank_score: Optional[int] = None
+    rerank_score: Optional[int | float] = None
     final_score: Optional[float] = None
 
     def __post_init__(self):
@@ -15,8 +15,7 @@ class SearchResult:
     def update_final_score(self):
         """Пересчитывает final_score на основе доступных скоров"""
         if self.rerank_score is not None:
-            # Нормализуем скор реранкера (1-5) к диапазону (0-1)
-            self.final_score = (self.rerank_score - 1) / 4
+            self.final_score = self.rerank_score
         else:
             # Используем векторный скор (distance, меньше = лучше)
             self.final_score = max(0, 1 - self.vector_score)

@@ -9,7 +9,7 @@ from .bot_rag_adapter import RAGAdapter
 user_context = {}
 adapter = RAGAdapter()
 
-# --- Команда /start ---
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_context[update.effective_user.id] = {"last_question": None}
     await update.message.reply_text(
@@ -20,6 +20,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     question = update.message.text
+
+    # Инициализируем контекст пользователя, если его нет
+    if user_id not in user_context:
+        user_context[user_id] = {"last_question": None}
 
     await update.message.reply_text("Думаю над ответом...")
 
@@ -83,5 +87,10 @@ async def back_to_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = update.effective_user.id
+    
+    # Инициализируем контекст пользователя, если его нет
+    if user_id not in user_context:
+        user_context[user_id] = {"last_question": None}
+    
     answer = user_context[user_id].get("last_answer", "Ответ не найден.")
     await query.edit_message_text(text=answer)
