@@ -1,10 +1,15 @@
+from abc import ABC, abstractmethod
 from typing import Optional, List, Dict
 from dataclasses import dataclass
+from gigachat import GigaChat
+from gigachat.models import Chat, Messages, ChatCompletion
 import logging
 import requests
 
+logger = logging.getLogger(__name__)
+
 @dataclass
-class OllamaResponse:
+class LLLResponse:
     """Унифицированный ответ от Ollama"""
     content: str                                # Содержимое ответа модели
     model: str                                  # Название использованной модели
@@ -14,24 +19,26 @@ class OllamaResponse:
     prompt_eval_count: Optional[int] = None     # Количество токенов в запросе (входные токены)
     eval_count: Optional[int] = None            # Количество токенов в ответе (выходные токены)
 
-class OllamaClient:
+class BaseLLMClient(ABC):
+
+    @abstractmethod
+    def chat(self, model: str, messages, **kwargs):
+        pass
+
+class OllamaClient(BaseLLMClient):
     """Клиент для работы с Ollama"""
 
     def __init__(self, base_url:str, timeout: int = 30):
         self.base_url = base_url
         self.timeout = timeout
-        self.logger = logging.getLogger(__name__)
+
 
     def chat(
         self,
         model: str,
         messages: List[Dict[str, str]],
-        temperature: float,
-        top_p: float,
-        top_k: int,
-        stream: bool = False,
         **kwargs
-    ) -> OllamaResponse:
+    ) -> LLLResponse:
         """Основной метод для чата с моделью"""
         
         try:
@@ -39,16 +46,13 @@ class OllamaClient:
             payload = {
                 "model": model,
                 "messages": messages,
-                "stream": stream,
+                "stream": False,
                 "options": {
-                    "temperature": temperature,
-                    "top_p": top_p,
-                    "top_k": top_k,
                     **kwargs
                 }
             }
 
-            self.logger.debug(f"Отправка запроса к ollama: {payload}")
+            logger.debug(f"Отправка запроса к ollama: {payload}")
 
             response = requests.post(
                 f"{self.base_url}/api/chat",
@@ -58,10 +62,10 @@ class OllamaClient:
 
             response.raise_for_status()
             result = response.json()
-            self.logger.debug(f"Получен ответ от ollama: {result}")
+            logger.debug(f"Получен ответ от ollama: {result}")
 
             if result.get("done"):
-                return OllamaResponse(
+                return LLLResponse(
                     content=result.get("message", {}).get("content", "").strip(),
                     model=result.get("model", model),
                     load_duration=result.get("load_duration"),
@@ -74,10 +78,10 @@ class OllamaClient:
                 raise RuntimeError("Ollama response is not done")
             
         except requests.exceptions.RequestException as e:
-            self.logger.error(f"Ошибка при отправке запроса к ollama: {e}")
+            logger.error(f"Ошибка при отправке запроса к ollama: {e}")
             raise e
         except Exception as e:
-            self.logger.error(f"Неизвестная ошибка: {e}")
+            logger.error(f"Неизвестная ошибка: {e}")
             raise e
 
 
@@ -87,11 +91,47 @@ class OllamaClient:
         try:
             response = requests.get(self.base_url)
             if 200 <= response.status_code < 300:
-                self.logger.debug(f"Сервер Ollama по адресу {self.base_url} доступен")
+                logger.debug(f"Сервер Ollama по адресу {self.base_url} доступен")
                 return True
             else:
                 self.logger.error(f"Сервер Ollama по адресу {self.base_url} недоступен")
                 return False
         except requests.exceptions.RequestException as e:
-            self.logger.exception(f"Произошла ошибка при запросе к {self.base_url}: {e}")
+            logger.exception(f"Произошла ошибка при запросе к {self.base_url}: {e}")
             return False
+
+class GigaClient:
+    def __init__(self, credentials):
+        self.giga = GigaChat(
+            credentials=credentials,
+            scope="GIGACHAT_API_PERS"
+        )
+
+    def chat(
+        self,
+        model,
+        messages: List[Messages],
+        **kwargs
+    ) -> LLLResponse:
+        
+        try:
+            payload = Chat(
+                messages=messages,
+                model=model,
+                **kwargs
+            )
+
+            response = self.giga.chat(payload)
+
+            return LLLResponse(
+                    content=response.choices[0].message.content,
+                    model=response.model,
+                    prompt_eval_count=response.usage.prompt_tokens,
+                    eval_count=response.usage.completion_tokens
+                )
+        
+        except Exception as e:
+            logger.error(f"Неизвестная ошибка: {e}")
+            raise e
+
+            

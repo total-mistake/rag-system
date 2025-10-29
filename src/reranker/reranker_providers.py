@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 from typing import List
 from ..models.pipeline import RerankingResult, StageMetrics
 from ..models.search import SearchResult
-from ..models.ollama_client import OllamaClient
+from src.llm.llm_factory import LLMClientsFactory
 from FlagEmbedding import FlagReranker
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from src.config.settings import settings
-from src.config.prompts import *
+from src.config.prompts import create_rerank_messages
+from transformers import AutoModel
 import logging
 import time
 import re
@@ -21,14 +22,10 @@ class BaseRerankerProvider(ABC):
         pass
 
 class OllamaRerankerProvider(BaseRerankerProvider):
-    """Реранкер через модель на сервере Ollama"""
+    """Реранкер через модель на сервере"""
 
     def __init__(self):
-        self.client  = OllamaClient(
-            base_url=settings.ollama_base_url,
-            timeout=settings.ollama_timeout
-        )
-        self.timeout = settings.ollama_timeout
+        self.client  = LLMClientsFactory.create_llm_client(settings.llm_client)
 
         # Параметры для реранкера из настроек
         self.model = settings.reranker_model
@@ -40,9 +37,9 @@ class OllamaRerankerProvider(BaseRerankerProvider):
         start_time = time.time()
         logger.info("начало этапа реранжирования")
 
-        if not self.client.is_healthy():
-            logger.info("Этап реранжирования пропущен из-за сбоя доступа к серверу Ollama")
-            return documents
+        # if not self.client.is_healthy():
+        #     logger.info("Этап реранжирования пропущен из-за сбоя доступа к серверу Ollama")
+        #     return documents
         
         total_tokens = 0
 
@@ -74,10 +71,10 @@ class OllamaRerankerProvider(BaseRerankerProvider):
             
             response = self.client.chat(
                 model=self.model,
-                messages=[RERANK_SYSTEM_PROMPT,create_rerank_user_prompt(query, content)],
+                messages=create_rerank_messages(query, content),
                 temperature=self.temperature,
-                top_p=self.top_p,
-                top_k=self.top_k
+                # top_p=self.top_p,
+                # top_k=self.top_k
             )
             
             score = self._extract_score(response.content)
@@ -109,7 +106,7 @@ class LocalBGERerankerProvider(BaseRerankerProvider):
     
     def rerank(self, query: str, documents: List[SearchResult]) -> RerankingResult:
         start_time = time.time()
-        logger.info("начало этапа реранжирования")
+        logger.info("Начало этапа реранжирования")
 
         for doc in documents:
             try:
@@ -120,6 +117,43 @@ class LocalBGERerankerProvider(BaseRerankerProvider):
 
             except Exception as e:
                 logger.error(f"Ошибка при реранжировании документа: {e}")
+
+        total_time = time.time() - start_time
+        logger.info(f"завершение этапа реранжирования. Время выполнения: {total_time:.3f}")
+
+        documents.sort(key=lambda x: x.final_score, reverse=True)
+        result = RerankingResult(
+            StageMetrics("rerank", total_time),
+            documents
+        )
+
+        return result
+    
+class LocalJinarerankerProvider(BaseRerankerProvider):
+    def __init__(self):
+        self.model = AutoModel.from_pretrained(
+            settings.reranker_model,
+            dtype="auto",
+            trust_remote_code=True,
+        )
+        self.model.eval()
+
+    def rerank(self, query: str, documents: List[SearchResult]) -> RerankingResult:
+        start_time = time.time()
+        logger.info("Начало этапа реранжирования")
+
+        list_of_docs = []
+        for doc in documents:
+            content = f"{doc.document.title}\n{doc.document.text}"
+            list_of_docs.append(content)
+
+        try:
+            results = self.model.rerank(query, list_of_docs)
+        except Exception as e:
+            logger.error(f"Ошибка при реранжировании документа: {e}")
+
+        for i, doc in enumerate(documents):
+            doc.rerank_score = results[i].get('relevance_score')
 
         total_time = time.time() - start_time
         logger.info(f"завершение этапа реранжирования. Время выполнения: {total_time:.3f}")

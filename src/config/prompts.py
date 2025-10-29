@@ -1,4 +1,4 @@
-# === ПРОМПТЫ ДЛЯ РЕРАНКЕРА ===
+
 RERANK_SYSTEM_PROMPT_1 = {
     "role": "system",
     "content": """Ты - эксперт по оценке релевантности документов. 
@@ -21,9 +21,7 @@ RERANK_SYSTEM_PROMPT_1 = {
    - Объективность: Оценивайте блоки, основываясь только на их содержании относительно запроса.
    - Никаких предположений: Не выводите информацию за рамки того, что явно указано в блоке."""
 }
-RERANK_SYSTEM_PROMPT = {
-    "role": "system",
-    "content": """Ты - эксперт по оценке релевантности документов. 
+RERANK_SYSTEM_PROMPT = """Ты - эксперт по оценке релевантности документов. 
 Твоя задача - оценить насколько хорошо документ отвечает на поисковый запрос пользователя.
 
 Оцени релевантность по шкале от 1 до 5:
@@ -34,27 +32,8 @@ RERANK_SYSTEM_PROMPT = {
 - 5: Идеально подходит для ответа на запрос
 
 Верни ТОЛЬКО число от 1 до 5, без дополнительных объяснений."""
-}
 
-def create_rerank_user_prompt(query: str, document_text: str) -> str:
-    """Создает пользовательский промпт для реранкинга"""
-    return {
-        "role": "user",
-        "content": 
-        f"""Запрос пользователя: {query}
-
-        Документ для оценки:
-        {document_text}
-
-        Оценка релевантности (1-5):"""
-    }
-
-# === ПРОМПТЫ ДЛЯ ГЕНЕРАЦИИ ОТВЕТОВ ===
-
-RAG_SYSTEM_PROMPT = {
-    "role": "system",
-    "content": """Ты помощник, который отвечает на вопросы пользователей на основе предоставленных документов.
-
+RAG_SYSTEM_PROMPT = """Ты помощник, который отвечает на вопросы пользователей на основе предоставленных документов.
 ПРАВИЛА:
 1. Отвечай только на основе предоставленной информации из документов.
 2. Если в документах нет ответа на вопрос, честно скажи об этом.
@@ -63,23 +42,44 @@ RAG_SYSTEM_PROMPT = {
 5. Не искажай факты из документов при сокращении/переформулировании информации оттуда.
 6. Если на вопрос существует несколько ответов - приведи все.
 """
-}
-
-def create_rag_user_prompt(query: str, context: str) -> str:
-    """Создание пользовательского промпта для RAG"""
-    return {
-        "role": "user",
-        "content":
-        f"""
-        Вопрос пользователя: {query}
-        Контекст из документов:
-        {context}
-
-        Ответ:"""
-    }
 
 from src.models.document import Document
 from typing import List
+
+def create_rerank_messages(query: str, document_text: str) -> List[str]:
+    return [
+        {
+            "role": "system",
+            "content": RERANK_SYSTEM_PROMPT
+        },
+        {"role": "user",
+        "content": 
+        f"""Запрос пользователя: {query}
+
+        Документ для оценки:
+        {document_text}
+
+        Оценка релевантности (1-5):"""}
+    ]
+
+
+def create_response_messages(query: str, documents: List[Document]) -> List[str]:
+    return [
+        {
+            "role": "system",
+            "content": RAG_SYSTEM_PROMPT
+        },
+        {
+            "role": "user",
+            "content":
+                f"""
+                Вопрос пользователя: {query}
+                Контекст из документов:
+                {format_document_context(documents)}
+
+                Ответ:"""
+        }
+    ]
 
 def format_document_context(documents: List[Document]) -> str:
     """Форматирование документов в контекст"""
