@@ -1,7 +1,7 @@
-from ..models.ollama_client import OllamaClient
+from src.llm.llm_factory import LLMClientsFactory
 from ..models.pipeline import GenerationResult, StageMetrics
 from ..models.document import Document
-from ..config.prompts import RAG_SYSTEM_PROMPT, create_rag_user_prompt, format_document_context
+from ..config.prompts import create_response_messages
 from ..config.settings import settings
 
 from typing import List
@@ -14,10 +14,7 @@ class ResponseGenerator:
     """Генератор ответов на основе найденных документов"""
 
     def __init__(self):
-        self.client = OllamaClient(
-            base_url=settings.ollama_base_url,
-            timeout=300
-        )
+        self.client = LLMClientsFactory.create_llm_client(settings.llm_client)
 
         self.model = settings.generation_model
         self.temperature = settings.generation_temperature
@@ -36,18 +33,13 @@ class ResponseGenerator:
 
             selected_docs = documents[:settings.max_context_documents]
             source_urls = [doc.url for doc in selected_docs]
-            context = format_document_context(selected_docs)
-            
-            messages = [RAG_SYSTEM_PROMPT, create_rag_user_prompt(query, context)]
-
-            logger.debug(f"запрос:\n {messages}")
 
             response = self.client.chat(
                 model=self.model,
-                messages=messages,
+                messages=create_response_messages(query, selected_docs),
                 temperature=self.temperature,
-                top_p=self.top_p,
-                top_k=self.top_k
+                # top_p=self.top_p,
+                # top_k=self.top_k
             )
 
             logger.debug(f"Сгенерированный ответ:\n {response.content}")

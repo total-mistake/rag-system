@@ -37,22 +37,20 @@ class GenerationResult:
     model_used: str
 
 @dataclass
+class GeneralResults:
+    total_tokens: int = None
+    total_duration: float = None
+
+@dataclass
 class RAGPipeline:
     """Полная информация о выполнении RAG пайплайна"""
     query: str
-    vector_search: Optional[VectorSearchResult] = None
+    retriever: Optional[VectorSearchResult] = None
     reranking: Optional[RerankingResult] = None
     generation: Optional[GenerationResult] = None
-    total_duration: Optional[float] = None
+    general: Optional[GeneralResults] = None
 
-    def get_total_duration(self) -> float:
-        """Вычисление общего времени выполнения"""
-        durations = []
-        if self.vector_search and self.vector_search.metrics.duration:
-            durations.append(self.vector_search.metrics.duration)
-        if self.reranking and self.reranking.metrics.duration:
-            durations.append(self.reranking.metrics.duration)
-        if self.generation and self.generation.metrics.duration:
-            durations.append(self.generation.metrics.duration)
-        
-        return sum(durations)
+    def update_general_results(self):
+        self.general = GeneralResults()
+        self.general.total_duration = self.retriever.metrics.duration + (self.retriever.metrics.duration or 0) + self.generation.metrics.duration
+        self.general.total_tokens = (self.reranking.total_tokens_used or 0) + self.generation.total_tokens

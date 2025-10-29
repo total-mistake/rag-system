@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from enum import Enum
-from typing import Optional
 
 class EmbeddingProviderType(str, Enum):
     LOCAL = "local"
@@ -10,6 +9,11 @@ class EmbeddingProviderType(str, Enum):
 class RerankerProviderType(str, Enum):
     OLLAMA = "ollama"
     LocalBGE = "bge"
+    LocalJina = "jina"
+
+class LLMClientType(str, Enum):
+    OLLAMA = "ollama"
+    GIGACHAT = "gigachat"
 
 class AppSettings(BaseSettings):
     # Общие настройки приложения
@@ -26,10 +30,12 @@ class AppSettings(BaseSettings):
     batch_size: int = Field(default=1, ge=1, description="Размер батча для индексации")
     show_progress: bool = Field(default=True, description="Показывать прогресс")
     
-    # Настройки Ollama
+    # Настройки LLM
     ollama_base_url: str = Field(default="http://172.16.100.164:11434", description="URL Ollama сервера")
     ollama_timeout: int = Field(default=30, ge=1, description="Таймаут запросов к Ollama")
     max_concurrent_requests: int = Field(default=5)
+    llm_client: LLMClientType = Field(default=LLMClientType.OLLAMA)
+    gigachat_credentials: str
     
     # Настройки поиска
     initial_candidates: int = Field(default=10, ge=1, description="Кандидаты из векторного поиска")

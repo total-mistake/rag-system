@@ -4,7 +4,8 @@
 from .reranker_providers import (
     BaseRerankerProvider,
     OllamaRerankerProvider,
-    LocalBGERerankerProvider
+    LocalBGERerankerProvider,
+    LocalJinarerankerProvider
 )
 from src.config.settings import RerankerProviderType
 
@@ -19,5 +20,7 @@ class RerankerProviderFactory:
             return OllamaRerankerProvider()
         elif provider_type == RerankerProviderType.LocalBGE:
             return LocalBGERerankerProvider()
+        elif provider_type == RerankerProviderType.LocalJina:
+            return LocalJinarerankerProvider()
         else:
             raise ValueError(f"Неподдерживаемый тип провайдера: {provider_type}")
