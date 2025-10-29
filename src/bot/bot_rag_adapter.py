@@ -34,7 +34,8 @@ class RAGAdapter:
                 "source_documents": "Инструкции откуда была взята информация"
             },
              "general": {
-                "total_duration": "Общее время выполнения"
+                "total_duration": "Общее время выполнения",
+                "total_tokens": "Обшее количество затраченных токенов"
             }
         }
 
@@ -64,15 +65,11 @@ class RAGAdapter:
         data = self.get_all_debug_info()
 
         mapping = {
-            "retriever": "vector_search",
+            "retriever": "retriever",
             "reranker": "reranking",
             "generator": "generation",
-            "general": "total_duration"
+            "general": "general"
         }
-
-        key = mapping.get(module.lower())
-        if module.lower() == "general":
-            return {"total_duration": data.get("total_duration")}
 
         key = mapping.get(module.lower())
         if not key:

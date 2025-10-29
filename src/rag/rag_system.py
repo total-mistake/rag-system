@@ -25,7 +25,7 @@ class RAGSystem:
         self.pipeline = RAGPipeline(query)
 
         retriever_results = self.retriever.search(query, top_k=settings.initial_candidates)
-        self.pipeline.vector_search = retriever_results
+        self.pipeline.retriever = retriever_results
 
         if self.reranker and len(retriever_results.results) > 1:
             rerank_results = self.reranker.rerank(query, retriever_results.results)
@@ -36,7 +36,7 @@ class RAGSystem:
         
         response = self.generator.generate_answer(query, documents)
         self.pipeline.generation = response
-        self.pipeline.total_duration = self.pipeline.get_total_duration()
+        self.pipeline.update_general_results()
 
         total_time = time.time() - start_time
         logger.info(f"завершение обработки запроса. Время выполнения: {total_time:3f}")
