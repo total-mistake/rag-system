@@ -93,4 +93,13 @@ async def back_to_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_context[user_id] = {"last_question": None}
     
     answer = user_context[user_id].get("last_answer", "Ответ не найден.")
-    await query.edit_message_text(text=answer)
+    
+    # Восстанавливаем исходную клавиатуру
+    keyboard = [
+        [InlineKeyboardButton("Больше информации об ответе", callback_data="more_info")]
+    ]
+    
+    await query.edit_message_text(
+        text=answer, 
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
