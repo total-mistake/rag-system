@@ -1,5 +1,6 @@
 from src.bot.tg_bot import *
 from src.config.settings import settings
+from datetime import datetime
 import logging
 
 # Настройка корневого логгера
@@ -7,7 +8,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('program_log.txt', mode='a', encoding='utf-8'),
+        logging.FileHandler(f'logs/program_log_{datetime.now().strftime("%Y-%m-%d_%H:%M")}.txt', mode='a', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )

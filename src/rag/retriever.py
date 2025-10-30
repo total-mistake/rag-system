@@ -22,7 +22,8 @@ class DocumentRetriever:
 
     def search(self, query: str, top_k: int = 1) -> VectorSearchResult:
         start_time = time.time()
-        logger.info("Начало векторного поиска")
+        logger.debug("Начало векторного поиска")
+        logger.info(f"Запрос пользователя:\n — {query}")
 
         vector_results = self._vector_search(query, settings.initial_candidates)
         vector_search_time = time.time() - start_time
@@ -39,7 +40,8 @@ class DocumentRetriever:
         
         total_time = time.time() - start_time
         # logging.info(f"Поиск завершен: {len(final_results)} результатов за {total_time:.3f}с")
-        logger.info(f"Завершение векторного поиска. время выполнения: {total_time:3f}")
+        logger.info(f"Успешный векторный поиск. Время выполнения: {total_time:3f}")
+        logger.info(f"Результаты векторного поиска:\n{"\n".join(f"{result.document.url}: {result.vector_score:.3f}" for result in final_results)}")
         
         return result
 
@@ -73,7 +75,7 @@ class DocumentRetriever:
 
                 search_results.append(search_result)
 
-            logger.info(f"Обработано {len(search_results)} результатов поиска")
+            logger.debug(f"Обработано {len(search_results)} результатов поиска")
             return search_results
         except Exception as e:
             logger.error(f"Ошибка при векторном поиске: {e}")

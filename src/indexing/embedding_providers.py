@@ -28,7 +28,7 @@ class LocalEmbeddingProvider(BaseEmbeddingProvider):
     """Локальная модель через SentenceTransformers"""
     
     def __init__(self, model_name: str):
-        logger.info(f"Инициализация локальной модели эмбеддингов: {model_name}")
+        logger.debug(f"Инициализация локальной модели эмбеддингов: {model_name}")
         self.model = SentenceTransformer(model_name)
         self.model_name = model_name
     
@@ -51,7 +51,7 @@ class OllamaEmbeddingProvider(BaseEmbeddingProvider):
         self.model_name = model_name
         self.base_url = base_url
         self._dimension = None
-        logger.info(f"Инициализация Ollama провайдера: {model_name} на {base_url}")
+        logger.debug(f"Инициализация Ollama провайдера: {model_name} на {base_url}")
     
     def encode(self, texts: List[str]) -> List[List[float]]:
         logger.debug(f"Векторизация {len(texts)} текстов через Ollama API")
@@ -87,5 +87,5 @@ class OllamaEmbeddingProvider(BaseEmbeddingProvider):
             logger.debug("Определяем размерность эмбеддингов")
             test_embedding = self.encode(["test"])[0]
             self._dimension = len(test_embedding)
-            logger.info(f"Размерность эмбеддингов: {self._dimension}")
+            logger.debug(f"Размерность эмбеддингов: {self._dimension}")
         return self._dimension

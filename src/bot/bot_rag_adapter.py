@@ -1,6 +1,9 @@
 from src.rag.rag_system import RAGSystem
-from src.models.pipeline import RAGPipeline  # если у тебя классы вынесены
+from src.models.pipeline import RAGPipeline 
 from dataclasses import asdict, is_dataclass
+import logging
+
+logger = logging.getLogger(__name__)
 
 class RAGAdapter:
     def __init__(self):
@@ -49,7 +52,19 @@ class RAGAdapter:
 
         sources = self.context.generation.source_urls or []
         sources_str = "\n".join(sources) if sources else "—"
-        return f"{response}\n\nИсточники:\n{sources_str}"
+
+        threshold = 3  # ваш порог
+        other_docs = [
+            r.document for r in self.context.reranking.results 
+            if r.rerank_score is not None and r.rerank_score >= threshold
+        ]
+        # other_docs = [r.document for r in self.context.reranking.results]
+        other_docs = [doc for doc in other_docs if doc.url not in sources]
+        other_docs_str = "\n".join(f"{doc.title} — {doc.url}" for doc in other_docs) if other_docs else "—"
+
+        final_response = f"{response}\n\nИсточники:\n{sources_str}\n\nВозможно, будет полезно:\n{other_docs_str}"
+
+        return final_response
 
     def get_all_debug_info(self) -> dict:
         """Преобразует весь контекст в словарь"""

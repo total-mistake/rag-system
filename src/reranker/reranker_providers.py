@@ -35,7 +35,7 @@ class OllamaRerankerProvider(BaseRerankerProvider):
 
     def rerank(self, query: str, documents: List[SearchResult]) -> RerankingResult:
         start_time = time.time()
-        logger.info("начало этапа реранжирования")
+        logger.debug("начало этапа реранжирования")
 
         # if not self.client.is_healthy():
         #     logger.info("Этап реранжирования пропущен из-за сбоя доступа к серверу Ollama")
@@ -53,11 +53,13 @@ class OllamaRerankerProvider(BaseRerankerProvider):
                     total_tokens += tokens
                 except Exception as e:
                     logger.error(f"Ошибка в параллельной задаче: {e}")
-                    
-        total_time = time.time() - start_time
-        logger.info(f"завершение этапа реранжирования. Время выполнения: {total_time:.3f}")
         
         documents.sort(key=lambda x: x.final_score, reverse=True)
+
+        total_time = time.time() - start_time
+
+        logger.info(f"Реранжирование прошло успешно. Время выполнения: {total_time:.3f}")
+        logger.info(f"Результаты реранкинга:\n{"\n".join(f"{result.document.url}: {result.rerank_score}" for result in documents)}")
         result = RerankingResult(
             StageMetrics("rerank", total_time),
             documents,
@@ -106,7 +108,7 @@ class LocalBGERerankerProvider(BaseRerankerProvider):
     
     def rerank(self, query: str, documents: List[SearchResult]) -> RerankingResult:
         start_time = time.time()
-        logger.info("Начало этапа реранжирования")
+        logger.debug("Начало этапа реранжирования")
 
         for doc in documents:
             try:
@@ -118,10 +120,12 @@ class LocalBGERerankerProvider(BaseRerankerProvider):
             except Exception as e:
                 logger.error(f"Ошибка при реранжировании документа: {e}")
 
-        total_time = time.time() - start_time
-        logger.info(f"завершение этапа реранжирования. Время выполнения: {total_time:.3f}")
-
         documents.sort(key=lambda x: x.final_score, reverse=True)
+
+        total_time = time.time() - start_time
+        logger.info(f"Реранжирование прошло успешно. Время выполнения: {total_time:.3f}")
+        logger.info(f"Результаты реранкинга:\n{"\n".join(f"{result.document.url}: {result.rerank_score}" for result in documents)}")
+        
         result = RerankingResult(
             StageMetrics("rerank", total_time),
             documents
@@ -140,7 +144,7 @@ class LocalJinarerankerProvider(BaseRerankerProvider):
 
     def rerank(self, query: str, documents: List[SearchResult]) -> RerankingResult:
         start_time = time.time()
-        logger.info("Начало этапа реранжирования")
+        logger.debug("Начало этапа реранжирования")
 
         list_of_docs = []
         for doc in documents:
@@ -155,10 +159,12 @@ class LocalJinarerankerProvider(BaseRerankerProvider):
         for i, doc in enumerate(documents):
             doc.rerank_score = results[i].get('relevance_score')
 
-        total_time = time.time() - start_time
-        logger.info(f"завершение этапа реранжирования. Время выполнения: {total_time:.3f}")
-
         documents.sort(key=lambda x: x.final_score, reverse=True)
+
+        total_time = time.time() - start_time
+        logger.info(f"Реранжирование прошло успешно. Время выполнения: {total_time:.3f}")
+        logger.info(f"Результаты реранкинга:\n{"\n".join(f"{result.document.url}: {result.rerank_score}" for result in documents)}")
+
         result = RerankingResult(
             StageMetrics("rerank", total_time),
             documents

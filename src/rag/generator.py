@@ -29,7 +29,7 @@ class ResponseGenerator:
 
         try:
             start_time = time.time()
-            logger.info("начало этапа генерации ответа от LLM")
+            logger.debug("Начало этапа генерации ответа от LLM")
 
             selected_docs = documents[:settings.max_context_documents]
             source_urls = [doc.url for doc in selected_docs]
@@ -50,7 +50,8 @@ class ResponseGenerator:
             logger.debug(f"Генерация ответа: {response.prompt_eval_count} входных + {response.eval_count} выходных токенов.\nВремя загрузки: {response.load_duration}\nВремя генерации ответа: {response.eval_duration}\nОбщее время: {response.total_duration}")
 
             total_time = time.time() - start_time
-            logger.info(f"завершение этапа генерации ответа. Время выполнения: {total_time:3f}")
+            logger.info(f"Успешная генерация ответа от llm. Время выполнения: {total_time:3f}")
+            logger.info(f"Ответ RAG-системы:\n — {answer}")
 
             return GenerationResult(
                 metrics=StageMetrics("generation", total_time),

@@ -20,7 +20,7 @@ class RAGSystem:
 
     def request(self, query: str) -> str:
         start_time = time.time()
-        logger.info("Начало обработки запроса")
+        logger.debug("Начало обработки запроса")
 
         self.pipeline = RAGPipeline(query)
 
@@ -39,7 +39,7 @@ class RAGSystem:
         self.pipeline.update_general_results()
 
         total_time = time.time() - start_time
-        logger.info(f"завершение обработки запроса. Время выполнения: {total_time:3f}")
+        logger.info(f"Успешная обработка запроса. Время выполнения: {total_time:3f}")
         return response.answer
     
     def get_debug_info(self) -> RAGPipeline:
