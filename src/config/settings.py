@@ -41,6 +41,7 @@ class AppSettings(BaseSettings):
     initial_candidates: int = Field(default=10, ge=1, description="Кандидаты из векторного поиска")
     final_results: int = Field(default=5, ge=1, description="Финальные результаты")
     max_context_documents: int = Field(default=5, ge=1, le=20, description="Максимум документов в контексте")
+    enable_hyde: bool = Field(default=False, description="Использовать в ретривере подход HyDE для улучшения векторного поиска")
     
     # Настройки реранкера
     reranker_provider: RerankerProviderType = Field(default=RerankerProviderType.OLLAMA)
@@ -49,6 +50,7 @@ class AppSettings(BaseSettings):
     reranker_model: str = Field(default="gemma3:4b-it-qat", description="Модель реранкера")
     reranker_top_k: int = Field(default=40, ge=1, description="Топ-к реранкера")
     reranker_top_p: float = Field(default=0.95, ge=0.0, le=1.0, description="Топ-п реранкера")
+    document_filtering_threshold: int = Field(default=0, description="Порог, результаты с оценкой меньше которых отбрасываются после реранкинга")
     
     # Настройки генерации ответа
     generation_model: str = Field(default="gemma3:4b-it-qat", description="Модель генерации ответа")

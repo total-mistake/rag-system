@@ -30,15 +30,18 @@ class RAGSystem:
         if self.reranker and len(retriever_results.results) > 1:
             rerank_results = self.reranker.rerank(query, retriever_results.results)
             self.pipeline.reranking = rerank_results
-            documents = [result.document for result in rerank_results.results]
+
+            filtered_docs = [doc for doc in rerank_results.results if doc.final_score and doc.final_score > settings.document_filtering_threshold]
+            documents = [result.document for result in filtered_docs]
         else:
             documents = [result.document for result in retriever_results.results]
-        
+
         response = self.generator.generate_answer(query, documents)
         self.pipeline.generation = response
         self.pipeline.update_general_results()
 
         total_time = time.time() - start_time
+        self.pipeline.general.total_duration = total_time
         logger.info(f"Успешная обработка запроса. Время выполнения: {total_time:3f}")
         return response.answer
     
@@ -47,6 +50,7 @@ class RAGSystem:
             return self.pipeline
         else:
             raise Exception("Object RAGPipeline does not exist, please run RAGSystem.request() first.")
+        
 
 
         

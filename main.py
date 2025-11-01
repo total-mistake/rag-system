@@ -32,7 +32,7 @@ def main():
     app.add_handler(CallbackQueryHandler(show_param_value, pattern="^param_"))
     app.add_handler(CallbackQueryHandler(back_to_answer, pattern="^back_to_answer$"))
 
-    logger.info("Бот запущен и готов к работе")
+    print("Бот запущен и готов к работе")
     app.run_polling()
 
 if __name__ == "__main__":

@@ -42,8 +42,6 @@ class ResponseGenerator:
                 # top_k=self.top_k
             )
 
-            logger.debug(f"Сгенерированный ответ:\n {response.content}")
-
             # Парсинг ответа и извлечение URL
             answer = response.content
 

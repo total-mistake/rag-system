@@ -22,7 +22,7 @@ class LLLResponse:
 class BaseLLMClient(ABC):
 
     @abstractmethod
-    def chat(self, model: str, messages, **kwargs):
+    def chat(self, model: str, messages, **kwargs) -> LLLResponse:
         pass
 
 class OllamaClient(BaseLLMClient):

@@ -3,6 +3,8 @@ from src.config import settings
 from ..models.document import Document
 from ..models.search import SearchResult
 from ..models.pipeline import VectorSearchResult, StageMetrics
+from src.llm.llm_factory import LLMClientsFactory
+from ..config.prompts import create_hyde_response
 from typing import List
 import logging
 import time
@@ -24,6 +26,9 @@ class DocumentRetriever:
         start_time = time.time()
         logger.debug("Начало векторного поиска")
         logger.info(f"Запрос пользователя:\n — {query}")
+
+        if settings.enable_hyde:
+            query = self._hyde(query)
 
         vector_results = self._vector_search(query, settings.initial_candidates)
         vector_search_time = time.time() - start_time
@@ -80,3 +85,21 @@ class DocumentRetriever:
         except Exception as e:
             logger.error(f"Ошибка при векторном поиске: {e}")
             return []
+        
+    def _hyde(self, query: str) -> str:
+        client = LLMClientsFactory.create_llm_client(settings.llm_client)
+
+        try:
+            response = client.chat(
+                model = settings.generation_model,
+                messages=create_hyde_response(query),
+                temperature=0.7
+            )
+
+            logger.info(f"Сгенерированный гипотетический документ:\n {response.content}")
+
+            return response.content
+        
+        except Exception as e:
+            logger.error(f"Ошибка при генерации документа: {e}")
+            raise
